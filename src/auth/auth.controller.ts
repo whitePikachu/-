@@ -1,4 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { Request } from 'express'
 import { AuthService } from './auth.service'
 import LoginDto from './dto/login.dto'
 import registerDto from './dto/register.dto'
@@ -13,5 +15,10 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.auto.login(dto)
+  }
+  @Get('islogin')
+  @UseGuards(AuthGuard('jwt'))
+  islogin(@Req() req: Request) {
+    return true
   }
 }

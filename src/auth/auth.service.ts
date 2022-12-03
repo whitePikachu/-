@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { user } from '@prisma/client'
 import { hash, verify } from 'argon2'
 import { PrismaService } from 'src/prisma/prisma.service'
 import LoginDto from './dto/login.dto'
@@ -6,7 +8,7 @@ import registerDto from './dto/register.dto'
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private jwt: JwtService) {}
   async register(dto: registerDto) {
     const paw = await hash(dto.paw)
     const user = await this.prisma.user.create({
@@ -17,7 +19,7 @@ export class AuthService {
       },
     })
     delete user.password
-    return user
+    return this.token(user)
   }
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
@@ -32,6 +34,15 @@ export class AuthService {
       throw new BadRequestException('密码错误')
     }
     delete user.password
-    return user
+    const token = await this.token(user)
+    return { ...user, token }
+  }
+  async token({ username, id }: user) {
+    return {
+      token: await this.jwt.signAsync({
+        username,
+        sub: id,
+      }),
+    }
   }
 }
