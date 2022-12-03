@@ -1,4 +1,4 @@
-import { PrismaService } from './../prisma/prisma.service'
+import { PrismaService } from '@/prisma/prisma.service'
 import { ConfigService } from '@nestjs/config'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { PassportStrategy } from '@nestjs/passport'
