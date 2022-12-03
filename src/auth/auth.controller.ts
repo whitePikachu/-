@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { CodService } from '@/cod/cod.service'
+import { Body, Controller, Get, Headers, Post, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { Request } from 'express'
 import { AuthService } from './auth.service'
@@ -7,10 +8,14 @@ import registerDto from './dto/register.dto'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auto: AuthService) {}
+  constructor(private auto: AuthService, private readonly codService: CodService) {}
   @Post('register')
-  register(@Body() dto: registerDto) {
-    return this.auto.register(dto)
+  async register(@Body() dto: registerDto, @Req() req: Request, @Headers() headers: any) {
+    const rescod = await this.codService.verifycod(req.ip, headers.cod)
+    if (!rescod.status) {
+      return rescod
+    }
+    return await this.auto.register(dto)
   }
   @Post('login')
   login(@Body() dto: LoginDto) {
