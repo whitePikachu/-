@@ -11,7 +11,7 @@ export class AuthController {
   constructor(private auto: AuthService, private readonly codService: CodService) {}
   @Post('register')
   async register(@Body() dto: registerDto, @Req() req: Request, @Headers() headers: any) {
-    const rescod = await this.codService.verifycod(req.ip, headers.cod)
+    const rescod = await this.codService.verifyCod(req.ip, headers.cod)
     if (!rescod.status) {
       return rescod
     }

@@ -7,6 +7,6 @@ export class CodController {
   constructor(private readonly codService: CodService) {}
   @Get('getcod')
   async getcod(@Req() req: Request) {
-    return await this.codService.getcod(req.ip)
+    return await this.codService.getCod(req.ip)
   }
 }
