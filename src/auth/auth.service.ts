@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { user } from '@prisma/client'
+import { auth } from '@prisma/client'
 import { hash, verify } from 'argon2'
 import { PrismaService } from 'src/prisma/prisma.service'
 import LoginDto from './dto/login.dto'
@@ -11,7 +11,7 @@ export class AuthService {
   constructor(private prisma: PrismaService, private jwt: JwtService) {}
   async register(dto: registerDto) {
     const paw = await hash(dto.paw)
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.auth.create({
       data: {
         username: dto.name,
         password: paw,
@@ -19,10 +19,11 @@ export class AuthService {
       },
     })
     delete user.password
-    return this.token(user)
+    const token = await this.token(user)
+    return { cod: 200, msg: '注册成功', token }
   }
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.auth.findUnique({
       where: {
         username: dto.name,
       },
@@ -30,20 +31,18 @@ export class AuthService {
     if (!user) {
       throw new BadRequestException('用户名错误')
     }
-
     if (!(await verify(user.password, dto.paw))) {
       throw new BadRequestException('密码错误')
     }
     delete user.password
     const token = await this.token(user)
-    return { ...user, ...token }
+    return { cod: 200, msg: '登陆成功', token }
   }
-  async token({ username, id }: user) {
-    return {
-      token: await this.jwt.signAsync({
-        username,
-        sub: id,
-      }),
-    }
+  async token({ auth_id, username }: auth) {
+    const token = await this.jwt.signAsync({
+      username,
+      sub: auth_id,
+    })
+    return token
   }
 }

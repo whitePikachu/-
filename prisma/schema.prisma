@@ -6,11 +6,21 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-model user{
-  id        Int   @id @default(autoincrement()) @db.UnsignedInt
-  username  String @unique
+model auth{
+  auth_id        Int   @id @default(autoincrement()) @db.UnsignedInt
+  username  String  @unique
+  email     String  @unique
   password  String
-  email     String
-  createdAt DateTime  @default(now()) @updatedAt
+  user      userinfo?
+}
+model userinfo{
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  avatar    String 
+  exp       Int       @default(0) @db.UnsignedInt
+  level     Int       @default(0) @db.UnsignedInt
+  createdAt DateTime  @default(now())
+  authId    Int       @unique @db.UnsignedInt
+  user      auth      @relation(fields: [authId], references: [auth_id], onDelete: Cascade)
+
 }
 
