@@ -30,12 +30,13 @@ export class AuthService {
     if (!user) {
       throw new BadRequestException('用户名错误')
     }
-    if (!verify(user.password, dto.paw)) {
+
+    if (!(await verify(user.password, dto.paw))) {
       throw new BadRequestException('密码错误')
     }
     delete user.password
     const token = await this.token(user)
-    return { ...user, token }
+    return { ...user, ...token }
   }
   async token({ username, id }: user) {
     return {

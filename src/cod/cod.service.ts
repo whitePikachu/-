@@ -1,28 +1,52 @@
 import { RedisService } from '@/redis/redis.service'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { createCipheriv, createDecipheriv } from 'crypto'
+import { AES, enc, mode, pad } from 'crypto-js'
 @Injectable()
 export class CodService {
   constructor(private readonly redisservice: RedisService, private configservice: ConfigService) {}
   async getCod(ip: string) {
-    const cod = this.randomString(6)
-    await this.redisservice.set(`cod:${ip}`, this.encrypt(cod), 'EX', 60)
-    return { status: true, msg: '验证码已发送', cod }
+    const cod = this.generatCod()
+    await this.redisservice.set(`cod:${ip}`, JSON.stringify(cod), 'EX', 60)
+    return { status: true, msg: '验证码已发送', cod: this.encrypt(cod) }
   }
   async verifyCod(ip: string, cod: string) {
     const Rcod = await this.redisservice.get(`cod:${ip}`)
     if (!Rcod) {
       return { status: false, msg: '验证码不存在' }
     }
-    if (Rcod === this.decrypt(cod)) {
-      await this.redisservice.del(`cod:${ip}`)
-      return { status: false, msg: '验证码错误' }
-    }
     if ((await this.redisservice.ttl(`cod:${ip}`)) < 0) {
       return { status: false, msg: '验证码已过期' }
     }
+    if (!(await this.verify(Rcod, this.decrypt(cod)))) {
+      await this.redisservice.del(`cod:${ip}`)
+      return { status: false, msg: '验证码错误' }
+    }
     return { status: true, msg: '验证码正确' }
+  }
+  async verify(cod: string, cod1: string) {
+    type cod = {
+      world: string
+      x: number
+      y: number
+    }
+    const cods: cod[] = JSON.parse(cod)
+    type code1 = {
+      x: number
+      y: number
+    }
+    const cods1: code1[] = JSON.parse(cod1)
+    let success = 0
+    console.log(cods, cods1)
+    for (let index = 0; index < cods.length; index++) {
+      const element = cods[index]
+      if (Math.abs(cods1[index]?.x - element.x) < 30 && Math.abs(cods1[index]?.y - element.y) < 30) {
+        success++
+      }
+    }
+    console.log(success)
+
+    return success === 4
   }
   private randomString(len: number) {
     len = len || 32
@@ -34,22 +58,40 @@ export class CodService {
     }
     return pwd
   }
-  private encrypt(
-    data: string,
-    key: string = this.configservice.get('CODE_KEY'),
-    iv: string = this.configservice.get('CODE_IV'),
-  ) {
-    const cipher = createCipheriv('aes192', Buffer.from(key, 'utf-8'), iv)
-    cipher.update(data, 'utf-8', 'hex')
-    return cipher.final('hex')
+  private generatCod() {
+    const s = this.randomString(4)
+    let res = []
+    //随机数字
+    for (let i = 0; i < 4; i++) {
+      res.push({
+        world: s[i],
+        x: Math.floor(Math.random() * 300),
+        y: Math.floor(Math.random() * 300),
+      })
+    }
+    return res
   }
-  private decrypt(
-    encrypted: string,
-    key: string = this.configservice.get('CODE_KEY'),
-    iv: string = this.configservice.get('CODE_IV'),
-  ) {
-    const decipher = createDecipheriv('aes192', Buffer.from(key, 'utf-8'), iv)
-    decipher.update(encrypted, 'hex', 'utf8')
-    return decipher.final('utf8')
+  // 加密
+  private encrypt(word: string | Object, keyStr: string = this.configservice.get('CODE_KEY')) {
+    if (word instanceof Object) {
+      word = JSON.stringify(word)
+    }
+    var key = enc.Utf8.parse(keyStr)
+    var encryptedObj = AES.encrypt(enc.Utf8.parse(word as string), key, {
+      mode: mode.ECB,
+      padding: pad.Pkcs7,
+    })
+    return encryptedObj.toString()
+  }
+  // 解密
+  private decrypt(word: string, keyStr: string = this.configservice.get('CODE_KEY')) {
+    let key = enc.Utf8.parse(keyStr)
+    let decrypt = AES.decrypt(word, key, {
+      mode: mode.ECB,
+      padding: pad.ZeroPadding,
+    })
+    let decString = enc.Utf8.stringify(decrypt).toString()
+    decString = `[${decString.match(/\[(.*?)\]/)?.[1]}]`
+    return decString
   }
 }
