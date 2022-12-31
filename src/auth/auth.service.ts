@@ -16,6 +16,11 @@ export class AuthService {
         username: dto.name,
         password: paw,
         email: dto.emali,
+        user: {
+          create: {
+            avatar: '',
+          },
+        },
       },
     })
     delete user.password

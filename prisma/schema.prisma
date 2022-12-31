@@ -7,11 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model auth{
-  auth_id        Int   @id @default(autoincrement()) @db.UnsignedInt
+  auth_id   Int     @id @default(autoincrement()) @db.UnsignedInt
   username  String  @unique
   email     String  @unique
   password  String
   user      userinfo?
+  post      post[]
+  comment   comment[]
+}
+model post{
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  title     String
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  Int       @db.UnsignedInt
+  author    auth      @relation(fields: [authorId], references: [auth_id])
+  comment   comment[]
+  plateId   Int       @db.UnsignedInt @default(0)
+  plate     plate     @relation(fields: [plateId], references: [id])
+}
+model comment{
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  Int       @db.UnsignedInt
+  author    auth      @relation(fields: [authorId], references: [auth_id])
+  postId    Int       @db.UnsignedInt
+  post      post      @relation(fields: [postId], references: [id])
+}
+
+model plate{
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  name      String    @unique
+  post      post[]
 }
 model userinfo{
   id        Int       @id @default(autoincrement()) @db.UnsignedInt
@@ -20,7 +50,7 @@ model userinfo{
   level     Int       @default(0) @db.UnsignedInt
   createdAt DateTime  @default(now())
   authId    Int       @unique @db.UnsignedInt
-  user      auth      @relation(fields: [authId], references: [auth_id], onDelete: Cascade)
+  user      auth      @relation(fields: [authId], references: [auth_id])
 
 }
 

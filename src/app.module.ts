@@ -5,6 +5,8 @@ import { PrismaModule } from '@/prisma/prisma.module'
 import { CodModule } from './cod/cod.module';
 import { RedisModule } from './redis/redis.module';
 import { UserinfoModule } from './userinfo/userinfo.module';
+import { PostModule } from './post/post.module';
+import { PlateModule } from './plate/plate.module';
 @Module({
   imports: [
     AuthModule,
@@ -15,6 +17,8 @@ import { UserinfoModule } from './userinfo/userinfo.module';
     CodModule,
     RedisModule,
     UserinfoModule,
+    PostModule,
+    PlateModule,
   ],
   controllers: [],
   providers: [],
