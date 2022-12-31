@@ -19,16 +19,16 @@ export class PlateService {
       },
     })
   }
-  async deleteplate(plateid: number) {
-    return await this.prisma.plate.deleteMany({
+  async deleteplate(id: number) {
+    return await this.prisma.plate.delete({
       where: {
-        id: plateid,
+        id,
       },
     })
   }
 
   async updateplate(plateid: number, name: string) {
-    return await this.prisma.plate.updateMany({
+    return await this.prisma.plate.update({
       where: {
         id: plateid,
       },

@@ -13,8 +13,8 @@ export class PlateController {
     return await this.postService.getplate()
   }
   @Delete('deleteplate')
-  async deleteplate(@Body() plateid: number) {
-    return await this.postService.deleteplate(plateid)
+  async deleteplate(@Body() body) {
+    return await this.postService.deleteplate(body.plateid)
   }
   @Put('updateplate')
   async updateplate(@Body() { plateid, plate }) {
