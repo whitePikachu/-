@@ -7,8 +7,11 @@ import { Request } from 'express'
 export class PostController {
   constructor(private readonly postService: PostService) {}
   @Get('platelist')
-  async getpostlist(@Query('plateid') plateid: number) {
-    return await this.postService.getpostlist(+plateid)
+  async getpostlist(@Query() { plateid, page, limit }) {
+    if (page === undefined || limit === undefined) {
+      return await this.postService.getpostlist(+plateid)
+    }
+    return await this.postService.getpostlist(+plateid, +page, +limit)
   }
   @Get()
   async getpost(@Query('id') id: number) {

@@ -15,6 +15,9 @@ export class UserinfoService {
         user: true,
       },
     })
+    if (userinfo === null) {
+      return { cod: 400, msg: '用户不存在' }
+    }
     delete userinfo.auth_id
     delete userinfo.user.authId
     delete userinfo.password

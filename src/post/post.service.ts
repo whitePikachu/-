@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common'
 @Injectable()
 export class PostService {
   constructor(private readonly prisma: PrismaService) {}
-  async post(authId: number, plateid: number, { title, content }) {
+  async post(authId: number, plateid: number = 0, { title, content }) {
     return await this.prisma.post.create({
       data: {
         title,
@@ -66,18 +66,31 @@ export class PostService {
     return data
   }
 
-  async getpostlist(plateid: number) {
+  async getpostlist(plateid: number, page: number = 1, limit: number = 10) {
     const data = await this.prisma.post.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
       where: {
         plateId: plateid,
       },
       select: {
         id: true,
         title: true,
+        content: true,
         authorId: true,
+        updatedAt: true,
       },
     })
+    // 分页结果
+    const total = await this.prisma.post.count({
+      where: {
+        plateId: plateid,
+      },
+    })
+    const totalPage = Math.ceil(total / limit)
+
     data.map(async (item) => {
+      item.content = item.content.slice(0, 20).concat('...')
       const user = await this.prisma.auth.findUnique({
         where: {
           auth_id: item.authorId,
@@ -86,13 +99,22 @@ export class PostService {
           user: true,
         },
       })
+      let comments = await this.prisma.comment.count({
+        where: {
+          postId: item.id,
+        },
+      })
+      if (comments) {
+        comments = 0
+      }
       delete user.password
       delete user.user.authId
       return {
+        comments,
         ...item,
         ...user,
       }
     })
-    return data
+    return { totalPage, data }
   }
 }
