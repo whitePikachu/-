@@ -7,6 +7,7 @@ import { RedisModule } from './redis/redis.module';
 import { UserinfoModule } from './userinfo/userinfo.module';
 import { PostModule } from './post/post.module';
 import { PlateModule } from './plate/plate.module';
+import { UploadModule } from './upload/upload.module';
 @Module({
   imports: [
     AuthModule,
@@ -19,6 +20,7 @@ import { PlateModule } from './plate/plate.module';
     UserinfoModule,
     PostModule,
     PlateModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],

@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport'
 import { UserinfoService } from './userinfo.service'
 import { Request } from 'express'
 import userDateDto from './dto/userinfo.dto'
+import userInfoDto from './dto/user.dto'
 @Controller('userinfo')
 export class UserinfoController {
   constructor(private readonly userinfoService: UserinfoService) {}
@@ -23,5 +24,10 @@ export class UserinfoController {
   @UseGuards(AuthGuard('jwt'))
   updateinfo(@Req() req: Request, @Body() data: userDateDto) {
     return this.userinfoService.updateinfo(req.user as number, data)
+  }
+  @Put('updateuserinfo')
+  @UseGuards(AuthGuard('jwt'))
+  updateuserinfo(@Req() req: Request, @Body() dto: userInfoDto) {
+    return this.userinfoService.updateuserinfo(req.user as number, dto)
   }
 }

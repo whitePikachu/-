@@ -2,6 +2,8 @@ import { Body, Controller, Delete, Get, Post, Put, Query, Req, UseGuards } from 
 import { PostService } from './post.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Request } from 'express'
+import searchPostDto from './dto/search.post.dto'
+import { link } from 'fs'
 
 @Controller('post')
 export class PostController {
@@ -29,5 +31,20 @@ export class PostController {
   @Put()
   async updated(@Body() { postid, title, content, plateId }) {
     return await this.postService.updated(+postid, { title, content, plateId })
+  }
+  @Get('getNewPost')
+  async getNewPost(@Query('num') num: number) {
+    return await this.postService.getNewPost(+num)
+  }
+  // 搜索帖子
+  @Get('search')
+  async search(@Query() dto: searchPostDto) {
+    return await this.postService.searchPost(dto.title)
+  }
+  //根据用户id获取帖子
+  @Get('getpostbyuserid')
+  @UseGuards(AuthGuard('jwt'))
+  async getpostbyuserid(@Req() req: Request, @Query() { link, page }) {
+    return await this.postService.getPostByUserId(req.user as number, page, link)
   }
 }

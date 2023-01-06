@@ -20,4 +20,8 @@ export class PlateController {
   async updateplate(@Body() { plateid, plate }) {
     return await this.postService.updateplate(plateid, plate)
   }
+  @Get('getplatebycount')
+  async getplatebycount() {
+    return await this.postService.getplatebycount()
+  }
 }

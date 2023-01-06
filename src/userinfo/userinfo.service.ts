@@ -2,6 +2,7 @@ import { PrismaService } from '@/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { auth } from '@prisma/client'
 import userDateDto from './dto/userinfo.dto'
+import userInfoDto from './dto/user.dto'
 
 @Injectable()
 export class UserinfoService {
@@ -43,5 +44,19 @@ export class UserinfoService {
       },
     })
     return { cod: 200, msg: '修改成功', data: user }
+  }
+  async updateuserinfo(id: number, dto: userInfoDto) {
+    const data = await this.prisma.userinfo.update({
+      where: {
+        authId: id,
+      },
+      data: {
+        QQ: dto.QQ,
+        nickname: dto.nickname,
+        github: dto.github,
+        signature: dto.signature,
+      },
+    })
+    return { cod: 200, msg: '修改成功', data }
   }
 }

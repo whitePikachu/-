@@ -46,6 +46,10 @@ model plate{
 model userinfo{
   id        Int       @id @default(autoincrement()) @db.UnsignedInt
   avatar    String 
+  nickname  String    @default("")
+  github    String    @default("")
+  QQ        String    @default("")
+  signature String    @default("这个家伙很懒，什么都没留下")
   exp       Int       @default(0) @db.UnsignedInt
   level     Int       @default(0) @db.UnsignedInt
   createdAt DateTime  @default(now())

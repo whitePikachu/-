@@ -67,29 +67,46 @@ export class PostService {
   }
 
   async getpostlist(plateid: number, page: number = 1, limit: number = 10) {
-    const data = await this.prisma.post.findMany({
-      skip: (page - 1) * limit,
-      take: limit,
-      where: {
-        plateId: plateid,
-      },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        authorId: true,
-        updatedAt: true,
-      },
-    })
-    // 分页结果
-    const total = await this.prisma.post.count({
-      where: {
-        plateId: plateid,
-      },
-    })
+    if (plateid === 0) {
+      const data = await this.prisma.post.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          authorId: true,
+          updatedAt: true,
+        },
+      })
+      const total = await this.prisma.post.count()
+      return await this.res(total, data, limit)
+    } else {
+      const data = await this.prisma.post.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        where: {
+          plateId: plateid,
+        },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          authorId: true,
+          updatedAt: true,
+        },
+      })
+      const total = await this.prisma.post.count({
+        where: {
+          plateId: plateid,
+        },
+      })
+      return await this.res(total, data, limit)
+    }
+  }
+  private async res(total: number, data: any, limit: number = 10) {
     const totalPage = Math.ceil(total / limit)
-
-    data.map(async (item) => {
+    data?.map(async (item) => {
       item.content = item.content.slice(0, 20).concat('...')
       const user = await this.prisma.auth.findUnique({
         where: {
@@ -115,6 +132,76 @@ export class PostService {
         ...user,
       }
     })
+
     return { totalPage, data }
+  }
+
+  async getNewPost(num = 5) {
+    const data = await this.prisma.post.findMany({
+      take: num,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+      },
+    })
+    return data
+  }
+  // 根据标题模糊搜索帖子
+  async searchPost(title: string, page: number = 1, limit: number = 10) {
+    const data = await this.prisma.post.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      where: {
+        title: {
+          contains: title,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        authorId: true,
+        updatedAt: true,
+      },
+    })
+    const total = await this.prisma.post.count({
+      where: {
+        title: {
+          contains: title,
+        },
+      },
+    })
+    const redt = data?.map((item) => {
+      item.title = item.title.replace(title, `<span style="color:red">${title}</span>`)
+      return item
+    })
+    return await this.res(total, redt, limit)
+  }
+  // 根据用户id获取帖子
+  async getPostByUserId(userId: number, page: number = 1, limit: number = 10) {
+    const data = await this.prisma.post.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      where: {
+        authorId: userId,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        authorId: true,
+        updatedAt: true,
+      },
+    })
+    const total = await this.prisma.post.count({
+      where: {
+        authorId: userId,
+      },
+    })
+    return await this.res(total, data, limit)
   }
 }
