@@ -30,4 +30,8 @@ export class UserinfoController {
   updateuserinfo(@Req() req: Request, @Body() dto: userInfoDto) {
     return this.userinfoService.updateuserinfo(req.user as number, dto)
   }
+  @Get('count')
+  async count(@Query('id') id: number) {
+    return await this.userinfoService.count(+id)
+  }
 }

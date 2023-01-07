@@ -21,6 +21,8 @@ model post{
   content   String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  // 浏览量
+  views     Int       @default(0) @db.UnsignedInt
   authorId  Int       @db.UnsignedInt
   author    auth      @relation(fields: [authorId], references: [auth_id])
   comment   comment[]
@@ -52,6 +54,7 @@ model userinfo{
   signature String    @default("这个家伙很懒，什么都没留下")
   exp       Int       @default(0) @db.UnsignedInt
   level     Int       @default(0) @db.UnsignedInt
+  mapleCoin Int       @default(0) @db.UnsignedInt
   createdAt DateTime  @default(now())
   authId    Int       @unique @db.UnsignedInt
   user      auth      @relation(fields: [authId], references: [auth_id])

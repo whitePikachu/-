@@ -1,22 +1,31 @@
 import { PrismaService } from '@/prisma/prisma.service'
+import { RedisService } from '@/redis/redis.service'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly redis: RedisService) {}
   async post(authId: number, plateid: number = 0, { title, content }) {
-    return await this.prisma.post.create({
+    const res = await this.prisma.post.create({
       data: {
         title,
         content,
         authorId: authId,
         plateId: plateid,
       },
+      select: { id: true },
     })
+    return { code: 200, message: '发帖成功', data: res }
   }
-  async updated(postid: number, { title, content, plateId }) {
-    if (((await this.getpost(postid)) as any).cod !== 400) {
-      return await this.prisma.post.update({
+  async updated(userId: number, postid: number, { title, content, plateId }) {
+    const post = (await this.getpost(postid)) as any
+    if (post.cod !== 400) {
+      console.log(userId)
+
+      if (userId !== post.author.auth_id) {
+        return { code: 400, message: '没有权限' }
+      }
+      const res = await this.prisma.post.update({
         where: {
           id: postid,
         },
@@ -25,13 +34,19 @@ export class PostService {
           content,
           plateId,
         },
+        select: { id: true },
       })
+      return { code: 200, message: '修改成功', data: res }
     }
     return { cod: 400, message: '帖子不存在' }
   }
 
-  async delete(postid: number) {
-    if (((await this.getpost(postid)) as any).cod !== 400) {
+  async delete(userId: number, postid: number) {
+    const post = (await this.getpost(postid)) as any
+    if (userId !== post.author.auth_id) {
+      return { code: 400, message: '没有权限' }
+    }
+    if (post.cod !== 400) {
       return await this.prisma.post.delete({
         where: {
           id: postid,
@@ -48,20 +63,17 @@ export class PostService {
       },
       include: {
         author: true,
-        plate: true,
         comment: true,
       },
     })
     if (!data) {
       return { cod: 400, message: '帖子不存在' }
     }
+
     delete data.author.password
     delete data.author.username
     delete data.author.email
-    delete data.plate.id
-    delete data.id
     delete data.authorId
-    delete data.plateId
 
     return data
   }
@@ -77,6 +89,7 @@ export class PostService {
           content: true,
           authorId: true,
           updatedAt: true,
+          views: true,
         },
       })
       const total = await this.prisma.post.count()
@@ -166,6 +179,7 @@ export class PostService {
         content: true,
         authorId: true,
         updatedAt: true,
+        views: true,
       },
     })
     const total = await this.prisma.post.count({
@@ -195,6 +209,7 @@ export class PostService {
         content: true,
         authorId: true,
         updatedAt: true,
+        views: true,
       },
     })
     const total = await this.prisma.post.count({
@@ -203,5 +218,30 @@ export class PostService {
       },
     })
     return await this.res(total, data, limit)
+  }
+  //增加浏览量
+  async addView(ip: string, postid: number) {
+    const data = await this.prisma.post.findUnique({
+      where: {
+        id: postid,
+      },
+      select: {
+        views: true,
+      },
+    })
+    if ((await this.redis.exists(`${ip}:views:${postid}`)) === 1 || (await this.redis.ttl(`ip:${postid}:views`)) > 0) {
+      return { cod: 200, data: data.views }
+    } else {
+      await this.redis.set(`${ip}:views:${postid}`, '', 'EX', 60 * 60 * 24)
+    }
+    await this.prisma.post.update({
+      where: {
+        id: postid,
+      },
+      data: {
+        views: data.views + 1,
+      },
+    })
+    return { cod: 200, message: '增加浏览量成功', data: data.views + 1 }
   }
 }

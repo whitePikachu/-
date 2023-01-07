@@ -19,7 +19,6 @@ export class UserinfoService {
     if (userinfo === null) {
       return { cod: 400, msg: '用户不存在' }
     }
-    delete userinfo.auth_id
     delete userinfo.user.authId
     delete userinfo.password
     return { cod: 200, msg: '获取成功', data: { ...userinfo } }
@@ -58,5 +57,26 @@ export class UserinfoService {
       },
     })
     return { cod: 200, msg: '修改成功', data }
+  }
+  async count(id: number) {
+    const mapleCoin = await this.prisma.userinfo.findUnique({
+      where: {
+        authId: id,
+      },
+      select: {
+        mapleCoin: true,
+      },
+    })
+    const post = await this.prisma.post.count({
+      where: {
+        authorId: id,
+      },
+    })
+    const reply = await this.prisma.comment.count({
+      where: {
+        authorId: id,
+      },
+    })
+    return { cod: 200, msg: '获取成功', data: { ...mapleCoin, post, reply } }
   }
 }

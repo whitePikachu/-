@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `userinfo` ADD COLUMN `mapleCoin` INTEGER UNSIGNED NOT NULL DEFAULT 0;
