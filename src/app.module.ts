@@ -8,6 +8,7 @@ import { UserinfoModule } from './userinfo/userinfo.module';
 import { PostModule } from './post/post.module';
 import { PlateModule } from './plate/plate.module';
 import { UploadModule } from './upload/upload.module';
+import { CommentModule } from './comment/comment.module';
 @Module({
   imports: [
     AuthModule,
@@ -21,6 +22,7 @@ import { UploadModule } from './upload/upload.module';
     PostModule,
     PlateModule,
     UploadModule,
+    CommentModule,
   ],
   controllers: [],
   providers: [],

@@ -63,19 +63,21 @@ export class PostService {
       },
       include: {
         author: true,
-        comment: true,
       },
     })
     if (!data) {
       return { cod: 400, message: '帖子不存在' }
     }
-
+    const comment = await this.prisma.comment.count({
+      where: {
+        postId: postid,
+      },
+    })
     delete data.author.password
     delete data.author.username
     delete data.author.email
     delete data.authorId
-
-    return data
+    return { comment, ...data }
   }
 
   async getpostlist(plateid: number, page: number = 1, limit: number = 10) {
