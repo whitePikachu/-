@@ -85,4 +85,16 @@ export class CommentService {
     })
     return { cod: 200, msg: '修改评论成功', data }
   }
+  //根据id查看某条评论信息
+  async getCommentByid(Commentid: number) {
+    const data = await this.prisma.comment.findFirst({
+      where: {
+        id: Commentid,
+      },
+      select: {
+        content: true,
+      },
+    })
+    return { cod: 200, msg: '获取评论成功', ...data }
+  }
 }

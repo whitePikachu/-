@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, Query, Put,
 import { CommentService } from './comment.service'
 import { AuthGuard } from '@nestjs/passport'
 import { CodService } from '@/cod/cod.service'
+import { query } from 'express'
 
 @Controller('comment')
 export class CommentController {
@@ -39,11 +40,20 @@ export class CommentController {
   }
   @Put()
   @UseGuards(AuthGuard('jwt'))
-  async updateComment(@Req() req, @Body() body: any) {
+  async updateComment(@Req() req, @Body() body: any, @Headers('cod') cod: any) {
+    const rescod = await this.codService.verifyCod(req.ip, cod)
+    if (!rescod.status) {
+      return rescod
+    }
     const { Commentid, content } = body
     if (!Commentid || !content) {
       return { status: 400, message: '参数错误' }
     }
     return this.commentService.updateComment(req.user as number, +Commentid, content)
+  }
+  @Get('id')
+  async getCommentByid(@Query('commentId') commentId: number) {
+    return this.commentService.getCommentByid(+commentId)
+    // return commentId
   }
 }
