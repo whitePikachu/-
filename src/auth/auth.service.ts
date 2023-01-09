@@ -40,6 +40,9 @@ export class AuthService {
     if (!(await verify(user.password, dto.paw))) {
       throw new BadRequestException('密码错误')
     }
+    if (user.jurisdiction === 3) {
+      throw new BadRequestException('账号已被封禁')
+    }
     delete user.password
     const token = await this.token(user)
     return { cod: 200, msg: '登陆成功', token }
@@ -74,5 +77,27 @@ export class AuthService {
       sub: auth_id,
     })
     return token
+  }
+  //验证权限
+  async checkPermissions(id: number) {
+    const data = await this.prisma.auth.findUnique({
+      where: {
+        auth_id: id,
+      },
+      select: {
+        jurisdiction: true,
+      },
+    })
+    switch (data.jurisdiction) {
+      case 0:
+        return { cod: 200, msg: '普通用户' }
+      case 1:
+        return { cod: 200, msg: '管理员' }
+      case 2:
+        return { cod: 200, msg: '超级管理员' }
+      case 3:
+        return { cod: 200, msg: '封禁' }
+    }
+    return data
   }
 }

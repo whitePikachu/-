@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `auth` ADD COLUMN `jurisdiction` INTEGER UNSIGNED NOT NULL DEFAULT 0;

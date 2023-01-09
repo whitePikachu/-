@@ -37,4 +37,10 @@ export class AuthController {
   islogin(@Req() req: Request) {
     return req.user
   }
+
+  @Get('Permissions')
+  @UseGuards(AuthGuard('jwt'))
+  async Permissions(@Req() req: Request) {
+    return await this.auto.checkPermissions(req.user as number)
+  }
 }

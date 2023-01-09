@@ -1,9 +1,11 @@
+import { AuthService } from '@/auth/auth.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
+import e from 'express'
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly auth: AuthService) {}
   // 发表评论
   async createComment(content: string, articleId: number, userId: number) {
     const data = await this.prisma.comment.create({
@@ -25,15 +27,17 @@ export class CommentService {
     if (!data) {
       return { cod: 400, msg: '评论不存在' }
     }
-    if (data.authorId !== userId) {
+    const Permissions = (await this.auth.checkPermissions(userId)) as any
+    if (data.authorId !== userId || Permissions.msg === '管理员' || Permissions.msg === '超级管理员') {
+      await this.prisma.comment.delete({
+        where: {
+          id: Commentid,
+        },
+      })
+      return { cod: 200, msg: '删除评论成功', data }
+    } else {
       return { cod: 400, msg: '无权删除评论' }
     }
-    await this.prisma.comment.delete({
-      where: {
-        id: Commentid,
-      },
-    })
-    return { cod: 200, msg: '删除评论成功', data }
   }
   async getComment(postId: number, page: number = 1, limit: number = 10) {
     const data = await this.prisma.comment.findMany({
@@ -72,18 +76,20 @@ export class CommentService {
     if (!data) {
       return { cod: 400, msg: '评论不存在' }
     }
-    if (data.authorId !== userId) {
+    const Permissions = (await this.auth.checkPermissions(userId)) as any
+    if (data.authorId === userId || Permissions.msg === '管理员' || Permissions.msg === '超级管理员') {
+      await this.prisma.comment.update({
+        where: {
+          id: Commentid,
+        },
+        data: {
+          content: content,
+        },
+      })
+      return { cod: 200, msg: '修改评论成功', data }
+    } else {
       return { cod: 400, msg: '无权修改评论' }
     }
-    await this.prisma.comment.update({
-      where: {
-        id: Commentid,
-      },
-      data: {
-        content: content,
-      },
-    })
-    return { cod: 200, msg: '修改评论成功', data }
   }
   //根据id查看某条评论信息
   async getCommentByid(Commentid: number) {

@@ -1,10 +1,15 @@
+import { AuthService } from '@/auth/auth.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RedisService } from '@/redis/redis.service'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prisma: PrismaService, private readonly redis: RedisService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+    private readonly auth: AuthService,
+  ) {}
   async post(authId: number, plateid: number = 0, { title, content }) {
     const res = await this.prisma.post.create({
       data: {
@@ -21,39 +26,42 @@ export class PostService {
     const post = (await this.getpost(postid)) as any
     if (post.cod !== 400) {
       console.log(userId)
-
-      if (userId !== post.author.auth_id) {
+      const Permissions = (await this.auth.checkPermissions(userId)) as any
+      if (userId === post.author.auth_id || Permissions.msg === '管理员' || Permissions.msg === '超级管理员') {
+        const res = await this.prisma.post.update({
+          where: {
+            id: postid,
+          },
+          data: {
+            title,
+            content,
+            plateId,
+          },
+          select: { id: true },
+        })
+        return { code: 200, message: '修改成功', data: res }
+      } else {
         return { code: 400, message: '没有权限' }
       }
-      const res = await this.prisma.post.update({
-        where: {
-          id: postid,
-        },
-        data: {
-          title,
-          content,
-          plateId,
-        },
-        select: { id: true },
-      })
-      return { code: 200, message: '修改成功', data: res }
     }
     return { cod: 400, message: '帖子不存在' }
   }
 
   async delete(userId: number, postid: number) {
     const post = (await this.getpost(postid)) as any
-    if (userId !== post.author.auth_id) {
+    const Permissions = (await this.auth.checkPermissions(userId)) as any
+    if (userId === post.author.auth_id || Permissions.msg === '管理员' || Permissions.msg === '超级管理员') {
+      if (post.cod !== 400) {
+        return await this.prisma.post.delete({
+          where: {
+            id: postid,
+          },
+        })
+      }
+      return { cod: 400, message: '帖子不存在' }
+    } else {
       return { code: 400, message: '没有权限' }
     }
-    if (post.cod !== 400) {
-      return await this.prisma.post.delete({
-        where: {
-          id: postid,
-        },
-      })
-    }
-    return { cod: 400, message: '帖子不存在' }
   }
 
   async getpost(postid: number) {

@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `userinfo` ADD COLUMN `QQ` VARCHAR(191) NOT NULL DEFAULT '',
+    ADD COLUMN `github` VARCHAR(191) NOT NULL DEFAULT '',
+    ADD COLUMN `nickname` VARCHAR(191) NOT NULL DEFAULT '',
+    ADD COLUMN `signature` VARCHAR(191) NOT NULL DEFAULT '这个家伙很懒，什么都没留下';

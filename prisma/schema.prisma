@@ -11,6 +11,7 @@ model auth{
   username  String  @unique
   email     String  @unique
   password  String
+  jurisdiction Int @default(0) @db.UnsignedInt
   user      userinfo?
   post      post[]
   comment   comment[]
