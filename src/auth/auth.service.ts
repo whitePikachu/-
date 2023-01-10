@@ -101,4 +101,28 @@ export class AuthService {
         return { cod: 200, msg: '普通用户' }
     }
   }
+  //统计用户数
+  async count() {
+    //最新用户
+    const newuser = await this.prisma.userinfo.findFirst({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    })
+    return {
+      cod: 200,
+      msg: '查询成功',
+      data: {
+        newuser: newuser.user.username,
+        count: await this.prisma.auth.count(),
+      },
+    }
+  }
 }

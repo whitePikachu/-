@@ -49,8 +49,12 @@ export class PostController {
   //根据用户id获取帖子
   @Get('getpostbyuserid')
   @UseGuards(AuthGuard('jwt'))
-  async getpostbyuserid(@Req() req: Request, @Query() { link = 10, page = 1 }) {
-    return await this.postService.getPostByUserId(req.user as number, page, link)
+  async getpostbyuserid(@Req() req: Request, @Query() { userid = -1, link = 10, page = 1 }) {
+    if (userid == -1) {
+      return await this.postService.getPostByUserId(req.user as number, page, link)
+    } else {
+      return await this.postService.getPostByUserId(+userid, page, link)
+    }
   }
   // 增加浏览量
   @Get('addview')

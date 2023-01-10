@@ -1,11 +1,16 @@
 import { AuthService } from '@/auth/auth.service'
 import { PrismaService } from '@/prisma/prisma.service'
+import { UserinfoService } from '@/userinfo/userinfo.service'
 import { Injectable } from '@nestjs/common'
 import e from 'express'
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly prisma: PrismaService, private readonly auth: AuthService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auth: AuthService,
+    private readonly userinfo: UserinfoService,
+  ) {}
   // 发表评论
   async createComment(content: string, articleId: number, userId: number) {
     const data = await this.prisma.comment.create({
@@ -14,6 +19,11 @@ export class CommentService {
         content: content,
         postId: articleId,
       },
+    })
+    this.userinfo.updateinfo(userId, {
+      exp: 1,
+      mapleCoin: 1,
+      level: 0,
     })
     return { cod: 200, msg: '发表评论成功', data }
   }

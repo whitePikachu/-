@@ -1,6 +1,7 @@
 import { AuthService } from '@/auth/auth.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RedisService } from '@/redis/redis.service'
+import { UserinfoService } from '@/userinfo/userinfo.service'
 import { BadGatewayException, BadRequestException, HttpException, Injectable } from '@nestjs/common'
 
 @Injectable()
@@ -9,6 +10,7 @@ export class PostService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly auth: AuthService,
+    private readonly userinfo: UserinfoService,
   ) {}
   async post(authId: number, plateid: number = 0, { title, content }) {
     const res = await this.prisma.post.create({
@@ -19,6 +21,11 @@ export class PostService {
         plateId: plateid,
       },
       select: { id: true },
+    })
+    this.userinfo.updateinfo(authId, {
+      exp: 1,
+      mapleCoin: 1,
+      level: 0,
     })
     return { code: 200, message: '发帖成功', data: res }
   }
@@ -93,15 +100,13 @@ export class PostService {
       const data = await this.prisma.post.findMany({
         skip: (page - 1) * limit,
         take: limit,
-        where: {
-          isTop: Number(isTop),
-        },
         select: {
           id: true,
           title: true,
           content: true,
           authorId: true,
           updatedAt: true,
+          isTop: true,
           views: true,
         },
       })

@@ -1,5 +1,5 @@
 export default class userDateDto {
-  avatar: string
-  exp: number
-  level: number
+  mapleCoin: number = 0
+  exp: number = 0
+  level: number = 0
 }

@@ -32,17 +32,25 @@ export class UserinfoService {
         user: true,
       },
     })
-    const user = await this.prisma.userinfo.update({
-      where: {
-        authId: userinfo.user.authId,
-      },
-      data: {
-        avatar: data.avatar,
-        exp: data.exp,
-        level: data.level,
-      },
-    })
-    return { cod: 200, msg: '修改成功', data: user }
+    if (userinfo) {
+      const user = await this.prisma.userinfo.findFirst({
+        where: {
+          authId: userinfo.user.authId,
+        },
+      })
+      if (user) {
+        return await this.prisma.userinfo.update({
+          where: {
+            authId: userinfo.user.authId,
+          },
+          data: {
+            mapleCoin: user.mapleCoin++,
+            exp: user.exp++,
+            level: user.level++,
+          },
+        })
+      }
+    }
   }
   async updateuserinfo(id: number, dto: userInfoDto) {
     const data = await this.prisma.userinfo.update({

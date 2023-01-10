@@ -43,4 +43,8 @@ export class AuthController {
   async Permissions(@Req() req: Request) {
     return await this.auto.checkPermissions(req.user as number)
   }
+  @Get('concat')
+  async concat(@Req() req: Request) {
+    return await this.auto.count()
+  }
 }
