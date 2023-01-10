@@ -88,7 +88,7 @@ export class AuthService {
         jurisdiction: true,
       },
     })
-    switch (data.jurisdiction) {
+    switch (data?.jurisdiction) {
       case 0:
         return { cod: 200, msg: '普通用户' }
       case 1:
@@ -97,7 +97,8 @@ export class AuthService {
         return { cod: 200, msg: '超级管理员' }
       case 3:
         return { cod: 200, msg: '封禁' }
+      default:
+        return { cod: 200, msg: '普通用户' }
     }
-    return data
   }
 }

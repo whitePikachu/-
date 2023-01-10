@@ -28,6 +28,7 @@ model post{
   comment   comment[]
   plateId   Int       @db.UnsignedInt @default(0)
   plate     plate     @relation(fields: [plateId], references: [id])
+  isTop     Int       @default(0) @db.UnsignedInt
 }
 model comment{
   id        Int       @id @default(autoincrement()) @db.UnsignedInt

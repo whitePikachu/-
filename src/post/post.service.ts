@@ -1,7 +1,7 @@
 import { AuthService } from '@/auth/auth.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RedisService } from '@/redis/redis.service'
-import { Injectable } from '@nestjs/common'
+import { BadGatewayException, BadRequestException, HttpException, Injectable } from '@nestjs/common'
 
 @Injectable()
 export class PostService {
@@ -88,11 +88,14 @@ export class PostService {
     return { comment, ...data }
   }
 
-  async getpostlist(plateid: number, page: number = 1, limit: number = 10) {
+  async getpostlist(plateid: number, page: number = 1, limit: number = 10, isTop = false) {
     if (plateid === 0) {
       const data = await this.prisma.post.findMany({
         skip: (page - 1) * limit,
         take: limit,
+        where: {
+          isTop: Number(isTop),
+        },
         select: {
           id: true,
           title: true,
@@ -110,6 +113,7 @@ export class PostService {
         take: limit,
         where: {
           plateId: plateid,
+          isTop: Number(isTop),
         },
         select: {
           id: true,
@@ -130,7 +134,7 @@ export class PostService {
   private async res(total: number, data: any, limit: number = 10) {
     const totalPage = Math.ceil(total / limit)
     data?.map(async (item) => {
-      item.content = item.content.slice(0, 20).concat('...')
+      item.content = item.content.slice(0, 40).concat('...')
       const user = await this.prisma.auth.findUnique({
         where: {
           auth_id: item.authorId,
@@ -158,7 +162,6 @@ export class PostService {
 
     return { totalPage, data }
   }
-
   async getNewPost(num = 5) {
     const data = await this.prisma.post.findMany({
       take: num,
@@ -253,5 +256,54 @@ export class PostService {
       },
     })
     return { cod: 200, message: '增加浏览量成功', data: data.views + 1 }
+  }
+  // 置顶帖子
+  async setTop(postid: number, userid: number) {
+    const data = await this.prisma.post.findUnique({
+      where: {
+        id: postid,
+      },
+      select: {
+        isTop: true,
+      },
+    })
+    if (!data) {
+      throw new HttpException('帖子不存在', 404)
+    }
+
+    const admin = await this.auth.checkPermissions(userid)
+    if (admin.msg === '管理员' || '超级管理员') {
+      if (data.isTop) {
+        const res = await this.prisma.post.update({
+          where: {
+            id: postid,
+          },
+          data: {
+            isTop: 0,
+          },
+          select: {
+            isTop: true,
+          },
+        })
+
+        return { cod: 200, message: '取消置顶成功', data: Boolean(res.isTop) }
+      } else {
+        const res = await this.prisma.post.update({
+          where: {
+            id: postid,
+          },
+          data: {
+            isTop: 1,
+          },
+          select: {
+            isTop: true,
+          },
+        })
+
+        return { cod: 200, message: '置顶成功', data: Boolean(res.isTop) }
+      }
+    } else {
+      throw new HttpException('权限不足', 403)
+    }
   }
 }

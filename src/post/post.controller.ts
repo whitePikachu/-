@@ -10,11 +10,8 @@ import { CodService } from '@/cod/cod.service'
 export class PostController {
   constructor(private readonly postService: PostService, private readonly codService: CodService) {}
   @Get('platelist')
-  async getpostlist(@Query() { plateid, page, limit }) {
-    if (page === undefined || limit === undefined) {
-      return await this.postService.getpostlist(+plateid)
-    }
-    return await this.postService.getpostlist(+plateid, +page, +limit)
+  async getpostlist(@Query() { plateid, page = 1, limit = 10, isTop = false }) {
+    return await this.postService.getpostlist(+plateid, +page, +limit, Boolean(isTop))
   }
   @Get()
   async getpost(@Query('id') id: number) {
@@ -52,12 +49,18 @@ export class PostController {
   //根据用户id获取帖子
   @Get('getpostbyuserid')
   @UseGuards(AuthGuard('jwt'))
-  async getpostbyuserid(@Req() req: Request, @Query() { link, page }) {
+  async getpostbyuserid(@Req() req: Request, @Query() { link = 10, page = 1 }) {
     return await this.postService.getPostByUserId(req.user as number, page, link)
   }
   // 增加浏览量
   @Get('addview')
   async addview(@Req() req, @Query('id') id: number) {
     return await this.postService.addView(req.ip, +id)
+  }
+  // 置顶帖子
+  @Put('top')
+  @UseGuards(AuthGuard('jwt'))
+  async top(@Req() req, @Query('id') id: number) {
+    return await this.postService.setTop(+id, req.user)
   }
 }

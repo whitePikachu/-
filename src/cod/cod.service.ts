@@ -37,14 +37,13 @@ export class CodService {
     }
     const cods1: code1[] = JSON.parse(cod1)
     let success = 0
-    console.log(cods, cods1)
+
     for (let index = 0; index < cods.length; index++) {
       const element = cods[index]
       if (Math.abs(cods1[index]?.x - element.x) < 30 && Math.abs(cods1[index]?.y - element.y) < 30) {
         success++
       }
     }
-    console.log(success)
 
     return success === 4
   }
