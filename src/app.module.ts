@@ -9,6 +9,7 @@ import { PostModule } from './post/post.module';
 import { PlateModule } from './plate/plate.module';
 import { UploadModule } from './upload/upload.module';
 import { CommentModule } from './comment/comment.module';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     AuthModule,
@@ -23,6 +24,7 @@ import { CommentModule } from './comment/comment.module';
     PlateModule,
     UploadModule,
     CommentModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

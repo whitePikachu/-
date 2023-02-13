@@ -5,10 +5,15 @@ import { Request } from 'express'
 import searchPostDto from './dto/search.post.dto'
 import { link } from 'fs'
 import { CodService } from '@/cod/cod.service'
+import { AdminService } from '@/admin/admin.service'
 
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService, private readonly codService: CodService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly codService: CodService,
+    private readonly adminService: AdminService,
+  ) {}
   @Get('platelist')
   async getpostlist(@Query() { plateid, page = 1, limit = 10, isTop = false }) {
     return await this.postService.getpostlist(+plateid, +page, +limit, Boolean(isTop))
@@ -21,6 +26,9 @@ export class PostController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async post(@Req() req: Request, @Headers('code') code: string, @Body() { title, content, plateid }) {
+    if (this.adminService.verifyPermissions(req.user as number)) {
+      return await this.postService.post(req.user as number, +plateid, { title, content })
+    }
     const rescod = await this.codService.verifyCod(req.ip, code)
     if (!rescod.status) {
       return rescod

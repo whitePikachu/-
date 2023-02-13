@@ -32,7 +32,6 @@ export class PostService {
   async updated(userId: number, postid: number, { title, content, plateId }) {
     const post = (await this.getpost(postid)) as any
     if (post.cod !== 400) {
-      console.log(userId)
       const Permissions = (await this.auth.checkPermissions(userId)) as any
       if (userId === post.author.auth_id || Permissions.msg === '管理员' || Permissions.msg === '超级管理员') {
         const res = await this.prisma.post.update({
@@ -43,9 +42,11 @@ export class PostService {
             title,
             content,
             plateId,
+            updatedAt: new Date(),
           },
           select: { id: true },
         })
+
         return { code: 200, message: '修改成功', data: res }
       } else {
         return { code: 400, message: '没有权限' }
@@ -105,7 +106,7 @@ export class PostService {
           title: true,
           content: true,
           authorId: true,
-          updatedAt: true,
+          updatedTime: true,
           isTop: true,
           views: true,
         },
@@ -125,7 +126,7 @@ export class PostService {
           title: true,
           content: true,
           authorId: true,
-          updatedAt: true,
+          updatedTime: true,
         },
       })
       const total = await this.prisma.post.count({

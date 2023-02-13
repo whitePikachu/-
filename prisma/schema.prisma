@@ -21,10 +21,11 @@ model post{
   title     String
   content   String    @db.VarChar(10000)
   createdAt DateTime  @default(now())
+  updatedTime DateTime @default(now())
   updatedAt DateTime  @updatedAt
   views     Int       @default(0) @db.UnsignedInt
   authorId  Int       @db.UnsignedInt
-  author    auth      @relation(fields: [authorId], references: [auth_id])
+  author    auth      @relation(fields: [authorId], references: [auth_id], onDelete: Cascade)
   comment   comment[]
   plateId   Int       @db.UnsignedInt @default(0)
   plate     plate     @relation(fields: [plateId], references: [id])
@@ -36,7 +37,7 @@ model comment{
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   authorId  Int       @db.UnsignedInt
-  author    auth      @relation(fields: [authorId], references: [auth_id])
+  author    auth      @relation(fields: [authorId], references: [auth_id],onDelete: Cascade)
   postId    Int       @db.UnsignedInt
   post      post      @relation(fields: [postId], references: [id])
 }
@@ -58,7 +59,7 @@ model userinfo{
   mapleCoin Int       @default(0) @db.UnsignedInt
   createdAt DateTime  @default(now())
   authId    Int       @unique @db.UnsignedInt
-  user      auth      @relation(fields: [authId], references: [auth_id])
+  user      auth      @relation(fields: [authId], references: [auth_id], onDelete: Cascade)
 
 }
 
